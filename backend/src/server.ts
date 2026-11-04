@@ -29,7 +29,8 @@ app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-const UPLOAD_DIR = path.resolve(__dirname, '..', 'uploads');
+const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, '..');
+const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
@@ -1531,9 +1532,17 @@ app.delete('/api/communications/:id', (req: Request, res: Response) => {
 });
 
 // --- Financial Settings ---
-const SETTINGS_FILE = path.resolve(__dirname, '..', 'financial_settings.json');
+const SETTINGS_FILE = path.join(DATA_DIR, 'financial_settings.json');
+const DEFAULT_SETTINGS_FILE = path.resolve(__dirname, '..', 'financial_settings.json');
 
 app.get('/api/financial-settings', (_req: Request, res: Response) => {
+  if (!fs.existsSync(SETTINGS_FILE) && fs.existsSync(DEFAULT_SETTINGS_FILE)) {
+    try {
+      fs.copyFileSync(DEFAULT_SETTINGS_FILE, SETTINGS_FILE);
+    } catch {
+      // Fallback
+    }
+  }
   if (fs.existsSync(SETTINGS_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));

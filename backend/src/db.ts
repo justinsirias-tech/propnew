@@ -2,7 +2,23 @@ import path from 'path';
 import fs from 'fs';
 import Database from 'better-sqlite3';
 
-const DB_PATH = path.resolve(__dirname, '..', 'prop_crm.db');
+const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, '..');
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+const DB_PATH = path.join(DATA_DIR, 'prop_crm.db');
+const DEFAULT_DB_PATH = path.resolve(__dirname, '..', 'prop_crm.db');
+
+// If using an external mounted DATA_DIR (e.g. Cloud Storage volume mount on Cloud Run) and DB doesn't exist yet, copy bundled seed DB
+if (DATA_DIR !== path.resolve(__dirname, '..') && !fs.existsSync(DB_PATH) && fs.existsSync(DEFAULT_DB_PATH)) {
+  try {
+    fs.copyFileSync(DEFAULT_DB_PATH, DB_PATH);
+  } catch (e) {
+    console.error('Failed to copy initial database to DATA_DIR:', e);
+  }
+}
+
 export const db = new Database(DB_PATH);
 
 // Enable foreign keys & WAL mode for high performance
