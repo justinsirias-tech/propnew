@@ -1,0 +1,208 @@
+import { db } from './db';
+import { FeaturePermissions } from './types';
+
+export const DEFAULT_ROLE_PERMISSIONS: Record<string, FeaturePermissions> = {
+  'Super Admin': {
+    dashboard: { view: true, view_financials: true, export_data: true },
+    units: { view: true, create: true, edit: true, delete: true, view_pricing: true },
+    crm: { view: true, create: true, edit: true, delete: true, view_contacts: true },
+    leases: {
+      view: true,
+      create: true,
+      edit: true,
+      delete: true,
+      view_confidential_spread: true,
+      view_statements: true,
+      mark_paid: true,
+      upload_slips: true,
+      terminate_lease: true,
+    },
+    issues: { view: true, create: true, edit: true, delete: true, resolve: true },
+    calculator: { view: true, export_reports: true },
+    financial_settings: { view: true, edit: true },
+    user_management: { view: true, edit: true },
+  },
+  'Branch Manager': {
+    dashboard: { view: true, view_financials: true, export_data: true },
+    units: { view: true, create: true, edit: true, delete: false, view_pricing: true },
+    crm: { view: true, create: true, edit: true, delete: false, view_contacts: true },
+    leases: {
+      view: true,
+      create: true,
+      edit: true,
+      delete: false,
+      view_confidential_spread: true,
+      view_statements: true,
+      mark_paid: true,
+      upload_slips: true,
+      terminate_lease: true,
+    },
+    issues: { view: true, create: true, edit: true, delete: false, resolve: true },
+    calculator: { view: true, export_reports: true },
+    financial_settings: { view: true, edit: false },
+    user_management: { view: true, edit: false },
+  },
+  'Senior Leasing Agent': {
+    dashboard: { view: true, view_financials: false, export_data: false },
+    units: { view: true, create: true, edit: true, delete: false, view_pricing: true },
+    crm: { view: true, create: true, edit: true, delete: false, view_contacts: true },
+    leases: {
+      view: true,
+      create: true,
+      edit: true,
+      delete: false,
+      view_confidential_spread: false,
+      view_statements: true,
+      mark_paid: true,
+      upload_slips: true,
+      terminate_lease: false,
+    },
+    issues: { view: true, create: true, edit: true, delete: false, resolve: false },
+    calculator: { view: true, export_reports: true },
+    financial_settings: { view: false, edit: false },
+    user_management: { view: false, edit: false },
+  },
+  'Junior Agent': {
+    dashboard: { view: true, view_financials: false, export_data: false },
+    units: { view: true, create: false, edit: false, delete: false, view_pricing: true },
+    crm: { view: true, create: false, edit: false, delete: false, view_contacts: true },
+    leases: {
+      view: true,
+      create: false,
+      edit: false,
+      delete: false,
+      view_confidential_spread: false,
+      view_statements: false,
+      mark_paid: false,
+      upload_slips: false,
+      terminate_lease: false,
+    },
+    issues: { view: true, create: true, edit: false, delete: false, resolve: false },
+    calculator: { view: true, export_reports: false },
+    financial_settings: { view: false, edit: false },
+    user_management: { view: false, edit: false },
+  },
+  'Property Inspector': {
+    dashboard: { view: false, view_financials: false, export_data: false },
+    units: { view: true, create: false, edit: false, delete: false, view_pricing: false },
+    crm: { view: false, create: false, edit: false, delete: false, view_contacts: false },
+    leases: {
+      view: false,
+      create: false,
+      edit: false,
+      delete: false,
+      view_confidential_spread: false,
+      view_statements: false,
+      mark_paid: false,
+      upload_slips: false,
+      terminate_lease: false,
+    },
+    issues: { view: true, create: true, edit: true, delete: false, resolve: true },
+    calculator: { view: false, export_reports: false },
+    financial_settings: { view: false, edit: false },
+    user_management: { view: false, edit: false },
+  },
+  Accountant: {
+    dashboard: { view: true, view_financials: true, export_data: true },
+    units: { view: true, create: false, edit: false, delete: false, view_pricing: true },
+    crm: { view: true, create: false, edit: false, delete: false, view_contacts: true },
+    leases: {
+      view: true,
+      create: false,
+      edit: false,
+      delete: false,
+      view_confidential_spread: true,
+      view_statements: true,
+      mark_paid: true,
+      upload_slips: true,
+      terminate_lease: false,
+    },
+    issues: { view: false, create: false, edit: false, delete: false, resolve: false },
+    calculator: { view: true, export_reports: true },
+    financial_settings: { view: true, edit: false },
+    user_management: { view: false, edit: false },
+  },
+};
+
+export function seedInitialData() {
+  const usersCount = (db.prepare('SELECT count(*) as c FROM app_users').get() as { c: number }).c;
+  if (usersCount === 0) {
+    const insertUser = db.prepare(`
+      INSERT INTO app_users (full_name, email, role, department, phone, status, avatar_url, last_login, permissions)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const users = [
+      [
+        'Sarah Chen',
+        'sarah.chen@proppulse.com',
+        'Super Admin',
+        'Executive Management',
+        '+66 81 992 0001',
+        'Active',
+        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=256&q=80',
+        'Today, 09:15 AM',
+        JSON.stringify(DEFAULT_ROLE_PERMISSIONS['Super Admin']),
+      ],
+      [
+        'Alex Wong',
+        'alex.wong@proppulse.com',
+        'Branch Manager',
+        'Operations & Sales',
+        '+66 82 445 1102',
+        'Active',
+        'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=256&q=80',
+        'Today, 10:40 AM',
+        JSON.stringify(DEFAULT_ROLE_PERMISSIONS['Branch Manager']),
+      ],
+      [
+        'Nadia Boonmee',
+        'nadia.b@proppulse.com',
+        'Senior Leasing Agent',
+        'Leasing & Sales',
+        '+66 89 771 2203',
+        'Active',
+        'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=256&q=80',
+        'Yesterday, 04:20 PM',
+        JSON.stringify(DEFAULT_ROLE_PERMISSIONS['Senior Leasing Agent']),
+      ],
+      [
+        'Kenji Takahashi',
+        'kenji.t@proppulse.com',
+        'Junior Agent',
+        'Leasing & Sales',
+        '+66 95 882 1044',
+        'Active',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
+        '3 days ago',
+        JSON.stringify(DEFAULT_ROLE_PERMISSIONS['Junior Agent']),
+      ],
+      [
+        'Somchai Prasert',
+        'somchai.p@proppulse.com',
+        'Property Inspector',
+        'Defect & Maintenance',
+        '+66 81 442 9910',
+        'Active',
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
+        'Today, 08:00 AM',
+        JSON.stringify(DEFAULT_ROLE_PERMISSIONS['Property Inspector']),
+      ],
+      [
+        'Ploypailin Sukhumvit',
+        'ploypailin.s@proppulse.com',
+        'Accountant',
+        'Finance & Accounts',
+        '+66 84 119 5520',
+        'Active',
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+        'Today, 11:15 AM',
+        JSON.stringify(DEFAULT_ROLE_PERMISSIONS['Accountant']),
+      ],
+    ];
+
+    for (const u of users) {
+      insertUser.run(...u);
+    }
+  }
+}

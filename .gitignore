@@ -25,10 +25,14 @@ venv/
 ENV/
 env/
 
-# Node / Frontend
+# Node / Frontend & Backend
 node_modules/
 frontend/node_modules/
+backend/node_modules/
 frontend/dist/
+backend/dist/
+*.db-shm
+*.db-wal
 .npm
 *.log
 npm-debug.log*
